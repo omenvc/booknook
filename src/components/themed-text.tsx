@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
-import { Fonts, ThemeColor } from '@/constants/theme';
+import { Fonts, FontSize, FontWeight, LineHeight, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextProps = TextProps & {
@@ -32,42 +32,49 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 
 const styles = StyleSheet.create({
   small: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 500,
+    fontFamily: Fonts.sans,
+    fontSize: FontSize.sm,
+    lineHeight: LineHeight.sm,
+    fontWeight: FontWeight.medium,
   },
   smallBold: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 700,
+    fontFamily: Fonts.sans,
+    fontSize: FontSize.sm,
+    lineHeight: LineHeight.sm,
+    fontWeight: FontWeight.bold,
   },
   default: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 500,
+    fontFamily: Fonts.sans,
+    fontSize: FontSize.base,
+    lineHeight: LineHeight.base,
+    fontWeight: FontWeight.medium,
   },
   title: {
-    fontSize: 48,
-    fontWeight: 600,
-    lineHeight: 52,
+    fontFamily: Fonts.serif,
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.semibold,
+    lineHeight: LineHeight.xxl,
   },
   subtitle: {
-    fontSize: 32,
-    lineHeight: 44,
-    fontWeight: 600,
+    fontFamily: Fonts.serif,
+    fontSize: FontSize.xl,
+    lineHeight: LineHeight.xl,
+    fontWeight: FontWeight.semibold,
   },
   link: {
-    lineHeight: 30,
-    fontSize: 14,
+    fontFamily: Fonts.sans,
+    lineHeight: LineHeight.lg,
+    fontSize: FontSize.sm,
   },
   linkPrimary: {
-    lineHeight: 30,
-    fontSize: 14,
+    fontFamily: Fonts.sans,
+    lineHeight: LineHeight.lg,
+    fontSize: FontSize.sm,
     color: '#3c87f7',
   },
   code: {
     fontFamily: Fonts.mono,
-    fontWeight: Platform.select({ android: 700 }) ?? 500,
-    fontSize: 12,
+    fontWeight: Platform.select({ android: FontWeight.bold }) ?? FontWeight.medium,
+    fontSize: FontSize.xs,
   },
 });
