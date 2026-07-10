@@ -1,0 +1,105 @@
+import { SymbolView } from 'expo-symbols';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, type TextInputProps } from 'react-native';
+import Animated, {
+  interpolate,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  ZoomIn,
+  ZoomOut,
+} from 'react-native-reanimated';
+
+import { Fonts, FontSize, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+
+type SearchInputProps = Required<Pick<TextInputProps, 'value' | 'onChangeText'>> &
+  Pick<TextInputProps, 'placeholder' | 'returnKeyType' | 'autoFocus'>;
+
+const SPRING_CONFIG = { damping: 16, stiffness: 220 };
+
+export function SearchInput({
+  value,
+  onChangeText,
+  placeholder,
+  returnKeyType = 'search',
+  autoFocus,
+}: SearchInputProps) {
+  const theme = useTheme();
+  const [isFocused, setIsFocused] = useState(false);
+  const focusProgress = useSharedValue(0);
+
+  useEffect(() => {
+    focusProgress.value = withSpring(isFocused ? 1 : 0, SPRING_CONFIG);
+  }, [isFocused, focusProgress]);
+
+  const containerStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(focusProgress.value, [0, 1], ['transparent', theme.primary]),
+    transform: [{ scale: interpolate(focusProgress.value, [0, 1], [1, 1.015]) }],
+  }));
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: interpolate(focusProgress.value, [0, 1], [1, 1.15]) },
+      { rotate: `${interpolate(focusProgress.value, [0, 1], [0, -12])}deg` },
+    ],
+  }));
+
+  return (
+    <Animated.View
+      style={[styles.container, { backgroundColor: theme.backgroundElement }, containerStyle]}>
+      <Animated.View style={iconStyle}>
+        <SymbolView
+          name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+          size={18}
+          weight="medium"
+          tintColor={isFocused ? theme.primary : theme.textSecondary}
+        />
+      </Animated.View>
+
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        placeholder={placeholder}
+        placeholderTextColor={theme.textSecondary}
+        style={[styles.input, { color: theme.text }]}
+        autoCorrect={false}
+        autoFocus={autoFocus}
+        returnKeyType={returnKeyType}
+      />
+
+      {value.length > 0 && (
+        <Animated.View entering={ZoomIn.duration(150)} exiting={ZoomOut.duration(150)}>
+          <Pressable hitSlop={8} onPress={() => onChangeText('')}>
+            <SymbolView
+              name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
+              size={18}
+              tintColor={theme.textSecondary}
+            />
+          </Pressable>
+        </Animated.View>
+      )}
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    borderRadius: Spacing.three,
+    borderWidth: 1.5,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  input: {
+    flex: 1,
+    fontFamily: Fonts.sans,
+    fontSize: FontSize.base,
+    padding: 0,
+  },
+});

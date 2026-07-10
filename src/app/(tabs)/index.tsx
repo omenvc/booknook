@@ -1,21 +1,14 @@
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Book } from '@/api/books';
 import { BookCard } from '@/components/book-card';
+import { SearchInput } from '@/components/search-input';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Fonts, FontSize, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useBookList } from '@/hooks/use-book-list';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useTheme } from '@/hooks/use-theme';
@@ -41,17 +34,10 @@ export default function BookListScreen() {
     <ThemedView style={{ flex: 1 }}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <TextInput
+          <SearchInput
             value={searchInput}
             onChangeText={setSearchInput}
             placeholder="Search books or authors"
-            placeholderTextColor={theme.textSecondary}
-            style={[
-              styles.searchInput,
-              { backgroundColor: theme.backgroundElement, color: theme.text },
-            ]}
-            autoCorrect={false}
-            returnKeyType="search"
           />
         </View>
 
@@ -133,13 +119,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Platform.select({ web: Spacing.six, default: Spacing.three }),
     paddingBottom: Spacing.three,
-  },
-  searchInput: {
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontFamily: Fonts.sans,
-    fontSize: FontSize.base,
   },
   listContent: {
     paddingHorizontal: Spacing.four,

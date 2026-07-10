@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
+import { useRef } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FlyToCartOverlay } from '@/components/fly-to-cart-overlay';
 import { ReviewItem } from '@/components/review-item';
 import { StarRating } from '@/components/star-rating';
 import { StockStatusBadge } from '@/components/stock-status-badge';
@@ -17,6 +19,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { FontSize, LineHeight, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useBookDetails } from '@/hooks/use-book-details';
+import { useFlyToCart } from '@/hooks/use-fly-to-cart';
 import { useTheme } from '@/hooks/use-theme';
 import { useCartStore } from '@/store/use-cart-store';
 
@@ -27,6 +30,8 @@ export default function BookDetailsScreen() {
   const addItem = useCartStore((state) => state.addItem);
   const { height: windowHeight } = useWindowDimensions();
   const coverHeight = Math.min(windowHeight * 0.42, 420);
+  const addToCartRef = useRef<View>(null);
+  const { flights, trigger, complete } = useFlyToCart();
 
   if (loading) {
     return (
@@ -66,6 +71,17 @@ export default function BookDetailsScreen() {
     book.reviews.length > 0
       ? book.reviews.reduce((sum, review) => sum + review.rating, 0) / book.reviews.length
       : 0;
+
+  const handleAddToCart = () => {
+    addItem(book);
+    // pageX/pageY are absolute from the true screen top, but this screen renders below a
+    // native header — so the flight's start point lands slightly lower than the button's
+    // real position, by roughly the header's height. Acceptable for a quick, approximate
+    // flourish; not worth the complexity of measuring relative to a specific ancestor.
+    addToCartRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+      trigger({ x: pageX, y: pageY, width, height });
+    });
+  };
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -111,8 +127,9 @@ export default function BookDetailsScreen() {
             </ThemedText>
 
             <Pressable
+              ref={addToCartRef}
               disabled={outOfStock}
-              onPress={() => addItem(book)}
+              onPress={handleAddToCart}
               style={({ pressed }) => [
                 styles.addToCartButton,
                 { backgroundColor: outOfStock ? theme.backgroundSelected : theme.secondary },
@@ -135,6 +152,8 @@ export default function BookDetailsScreen() {
             )}
           </View>
         </ScrollView>
+
+        <FlyToCartOverlay flights={flights} coverUrl={book.coverUrl} onComplete={complete} />
       </SafeAreaView>
     </ThemedView>
   );
