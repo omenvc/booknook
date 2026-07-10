@@ -6,6 +6,7 @@ type CartState = {
   items: CartItem[];
   addItem: (book: Book, quantity?: number) => void;
   removeItem: (bookId: string) => void;
+  updateQuantity: (bookId: string, quantity: number) => void;
   clear: () => void;
 };
 
@@ -25,5 +26,18 @@ export const useCartStore = create<CartState>((set) => ({
     }),
   removeItem: (bookId) =>
     set((state) => ({ items: state.items.filter((item) => item.book.id !== bookId) })),
+  updateQuantity: (bookId, quantity) =>
+    set((state) => {
+      if (quantity <= 0) {
+        return { items: state.items.filter((item) => item.book.id !== bookId) };
+      }
+      return {
+        items: state.items.map((item) => (item.book.id === bookId ? { ...item, quantity } : item)),
+      };
+    }),
   clear: () => set({ items: [] }),
 }));
+
+export function selectCartTotal(state: CartState): number {
+  return state.items.reduce((sum, item) => sum + item.book.price * item.quantity, 0);
+}

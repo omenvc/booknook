@@ -1,6 +1,13 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ReviewItem } from '@/components/review-item';
@@ -8,7 +15,7 @@ import { StarRating } from '@/components/star-rating';
 import { StockStatusBadge } from '@/components/stock-status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { FontSize, LineHeight, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useBookDetails } from '@/hooks/use-book-details';
 import { useTheme } from '@/hooks/use-theme';
 import { useCartStore } from '@/store/use-cart-store';
@@ -18,6 +25,8 @@ export default function BookDetailsScreen() {
   const theme = useTheme();
   const { book, loading, error, retry } = useBookDetails(id);
   const addItem = useCartStore((state) => state.addItem);
+  const { height: windowHeight } = useWindowDimensions();
+  const coverHeight = Math.min(windowHeight * 0.42, 420);
 
   if (loading) {
     return (
@@ -66,7 +75,7 @@ export default function BookDetailsScreen() {
           showsVerticalScrollIndicator={false}>
           <Image
             source={{ uri: book.coverUrl }}
-            style={styles.cover}
+            style={[styles.cover, { height: coverHeight }]}
             contentFit="cover"
             transition={200}
             cachePolicy="memory-disk"
@@ -161,7 +170,6 @@ const styles = StyleSheet.create({
   },
   cover: {
     width: '100%',
-    aspectRatio: 2 / 3,
   },
   content: {
     paddingHorizontal: Spacing.four,
@@ -170,6 +178,8 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 0,
+    fontSize: FontSize.xl,
+    lineHeight: LineHeight.xl,
   },
   priceRow: {
     flexDirection: 'row',
