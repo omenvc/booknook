@@ -1,8 +1,3 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import '@/global.css';
 
 import { Platform } from 'react-native';
@@ -14,11 +9,8 @@ export const Colors = {
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
-    // Oxblood — evokes leather-bound book covers, warm and trustworthy without reading as tech-startup blue.
     primary: '#7A2E33',
-    // Forest green — classic library pairing with oxblood (burgundy books, green leather chairs).
     secondary: '#3F6B54',
-    // Warm parchment — reads like aged paper, a soft neutral for cards/backgrounds.
     tertiary: '#F4ECDD',
   },
   dark: {
@@ -37,13 +29,9 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
@@ -70,14 +58,13 @@ export const Spacing = {
   six: 64,
 } as const;
 
-// Headings use Fonts.serif (literary feel), body copy uses Fonts.sans.
 export const FontSize = {
   xs: 12,
   sm: 14,
   base: 16,
-  lg: 20,
-  xl: 32,
-  xxl: 48,
+  lg: 18,
+  xl: 18,
+  xxl: 18,
 } as const;
 
 export const LineHeight = {
@@ -85,8 +72,8 @@ export const LineHeight = {
   sm: 20,
   base: 24,
   lg: 30,
-  xl: 44,
-  xxl: 52,
+  xl: 24,
+  xxl: 24,
 } as const;
 
 export const FontWeight = {

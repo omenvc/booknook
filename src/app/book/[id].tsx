@@ -1,6 +1,20 @@
-import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
-import { useRef } from 'react';
+import { FlyToCartOverlay } from "@/components/fly-to-cart-overlay";
+import { ReviewItem } from "@/components/review-item";
+import { StarRating } from "@/components/star-rating";
+import { StockStatusBadge } from "@/components/stock-status-badge";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Toast } from "@/components/toast";
+import { sharedStyles } from "@/constants/shared-styles";
+import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { useBookDetails } from "@/hooks/use-book-details";
+import { useFlyToCart } from "@/hooks/use-fly-to-cart";
+import { useTheme } from "@/hooks/use-theme";
+import { useToast } from "@/hooks/use-toast";
+import { useCartStore } from "@/store/use-cart-store";
+import { Image } from "expo-image";
+import { useLocalSearchParams } from "expo-router";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -8,20 +22,10 @@ import {
   StyleSheet,
   useWindowDimensions,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { FlyToCartOverlay } from '@/components/fly-to-cart-overlay';
-import { ReviewItem } from '@/components/review-item';
-import { StarRating } from '@/components/star-rating';
-import { StockStatusBadge } from '@/components/stock-status-badge';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { FontSize, LineHeight, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useBookDetails } from '@/hooks/use-book-details';
-import { useFlyToCart } from '@/hooks/use-fly-to-cart';
-import { useTheme } from '@/hooks/use-theme';
-import { useCartStore } from '@/store/use-cart-store';
+const ADD_TO_CART_DELAY = 3000;
 
 export default function BookDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,11 +36,13 @@ export default function BookDetailsScreen() {
   const coverHeight = Math.min(windowHeight * 0.42, 420);
   const addToCartRef = useRef<View>(null);
   const { flights, trigger, complete } = useFlyToCart();
+  const { toastMessage, showToast } = useToast();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   if (loading) {
     return (
       <ThemedView style={{ flex: 1 }}>
-        <SafeAreaView style={styles.centerBox}>
+        <SafeAreaView style={sharedStyles.centerBox}>
           <ActivityIndicator color={theme.primary} />
         </SafeAreaView>
       </ThemedView>
@@ -46,17 +52,21 @@ export default function BookDetailsScreen() {
   if (error || !book) {
     return (
       <ThemedView style={{ flex: 1 }}>
-        <SafeAreaView style={styles.centerBox}>
-          <ThemedText themeColor="textSecondary" style={styles.centerText}>
-            {error ?? 'Something went wrong.'}
+        <SafeAreaView style={sharedStyles.centerBox}>
+          <ThemedText
+            themeColor="textSecondary"
+            style={sharedStyles.centerText}
+          >
+            {error ?? "Something went wrong."}
           </ThemedText>
           <Pressable
             onPress={retry}
             style={({ pressed }) => [
-              styles.retryButton,
+              sharedStyles.pillButton,
               { backgroundColor: theme.primary },
-              pressed && styles.pressed,
-            ]}>
+              pressed && sharedStyles.pressed,
+            ]}
+          >
             <ThemedText themeColor="background" type="smallBold">
               Retry
             </ThemedText>
@@ -66,29 +76,36 @@ export default function BookDetailsScreen() {
     );
   }
 
-  const outOfStock = book.stockStatus === 'out-of-stock';
+  const outOfStock = book.stockStatus === "out-of-stock";
   const averageRating =
     book.reviews.length > 0
-      ? book.reviews.reduce((sum, review) => sum + review.rating, 0) / book.reviews.length
+      ? book.reviews.reduce((sum, review) => sum + review.rating, 0) /
+        book.reviews.length
       : 0;
 
   const handleAddToCart = () => {
-    addItem(book);
-    // pageX/pageY are absolute from the true screen top, but this screen renders below a
-    // native header — so the flight's start point lands slightly lower than the button's
-    // real position, by roughly the header's height. Acceptable for a quick, approximate
-    // flourish; not worth the complexity of measuring relative to a specific ancestor.
-    addToCartRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
-      trigger({ x: pageX, y: pageY, width, height });
-    });
+    if (isAddingToCart) return;
+    setIsAddingToCart(true);
+    setTimeout(() => {
+      addItem(book);
+      addToCartRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+        trigger({ x: pageX, y: pageY, width, height });
+      });
+      setIsAddingToCart(false);
+      showToast("Added to cart");
+    }, ADD_TO_CART_DELAY);
   };
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+      <SafeAreaView
+        style={sharedStyles.safeArea}
+        edges={["bottom", "left", "right"]}
+      >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+        >
           <Image
             source={{ uri: book.coverUrl }}
             style={[styles.cover, { height: coverHeight }]}
@@ -117,7 +134,7 @@ export default function BookDetailsScreen() {
                 <StarRating rating={averageRating} size={16} />
                 <ThemedText type="small" themeColor="textSecondary">
                   {averageRating.toFixed(1)} ({book.reviews.length} review
-                  {book.reviews.length === 1 ? '' : 's'})
+                  {book.reviews.length === 1 ? "" : "s"})
                 </ThemedText>
               </View>
             )}
@@ -128,16 +145,28 @@ export default function BookDetailsScreen() {
 
             <Pressable
               ref={addToCartRef}
-              disabled={outOfStock}
+              disabled={outOfStock || isAddingToCart}
               onPress={handleAddToCart}
               style={({ pressed }) => [
                 styles.addToCartButton,
-                { backgroundColor: outOfStock ? theme.backgroundSelected : theme.secondary },
-                pressed && !outOfStock && styles.pressed,
-              ]}>
-              <ThemedText type="smallBold" themeColor={outOfStock ? 'textSecondary' : 'background'}>
-                {outOfStock ? 'Out of Stock' : 'Add to Cart'}
-              </ThemedText>
+                {
+                  backgroundColor: outOfStock
+                    ? theme.backgroundSelected
+                    : theme.secondary,
+                },
+                pressed && !outOfStock && sharedStyles.pressed,
+              ]}
+            >
+              {isAddingToCart ? (
+                <ActivityIndicator color={theme.background} />
+              ) : (
+                <ThemedText
+                  type="smallBold"
+                  themeColor={outOfStock ? "textSecondary" : "background"}
+                >
+                  {outOfStock ? "Out of Stock" : "Add to Cart"}
+                </ThemedText>
+              )}
             </Pressable>
 
             {book.reviews.length > 0 && (
@@ -153,42 +182,26 @@ export default function BookDetailsScreen() {
           </View>
         </ScrollView>
 
-        <FlyToCartOverlay flights={flights} coverUrl={book.coverUrl} onComplete={complete} />
+        <FlyToCartOverlay
+          flights={flights}
+          coverUrl={book.coverUrl}
+          onComplete={complete}
+        />
+        <Toast message={toastMessage} />
       </SafeAreaView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  centerBox: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.three,
-    paddingHorizontal: Spacing.four,
-  },
-  centerText: {
-    textAlign: 'center',
-  },
-  retryButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
   scrollContent: {
-    alignSelf: 'center',
-    width: '100%',
+    alignSelf: "center",
+    width: "100%",
     maxWidth: MaxContentWidth,
     paddingBottom: Spacing.six,
   },
   cover: {
-    width: '100%',
+    width: "100%",
   },
   content: {
     paddingHorizontal: Spacing.four,
@@ -197,18 +210,16 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 0,
-    fontSize: FontSize.xl,
-    lineHeight: LineHeight.xl,
   },
   priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: Spacing.two,
   },
   ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.two,
   },
   description: {
@@ -218,7 +229,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.three,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.three,
-    alignItems: 'center',
+    alignItems: "center",
   },
   reviewsSection: {
     marginTop: Spacing.five,

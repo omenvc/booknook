@@ -1,7 +1,8 @@
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, type TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import Animated, {
+  FadeInDown,
   interpolate,
   interpolateColor,
   useAnimatedStyle,
@@ -35,7 +36,11 @@ export function SearchInput({
   }, [isFocused, focusProgress]);
 
   const containerStyle = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(focusProgress.value, [0, 1], ['transparent', theme.primary]),
+    borderColor: interpolateColor(
+      focusProgress.value,
+      [0, 1],
+      [theme.backgroundSelected, theme.primary]
+    ),
     transform: [{ scale: interpolate(focusProgress.value, [0, 1], [1, 1.015]) }],
   }));
 
@@ -46,17 +51,28 @@ export function SearchInput({
     ],
   }));
 
+  const iconBadgeStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(focusProgress.value, [0, 1], [0, 0.14]),
+    transform: [{ scale: interpolate(focusProgress.value, [0, 1], [0.5, 1]) }],
+  }));
+
   return (
     <Animated.View
+      entering={FadeInDown.springify().damping(18)}
       style={[styles.container, { backgroundColor: theme.backgroundElement }, containerStyle]}>
-      <Animated.View style={iconStyle}>
-        <SymbolView
-          name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
-          size={18}
-          weight="medium"
-          tintColor={isFocused ? theme.primary : theme.textSecondary}
+      <View style={styles.iconWrapper}>
+        <Animated.View
+          style={[styles.iconBadge, { backgroundColor: theme.primary }, iconBadgeStyle]}
         />
-      </Animated.View>
+        <Animated.View style={iconStyle}>
+          <SymbolView
+            name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
+            size={18}
+            weight="medium"
+            tintColor={isFocused ? theme.primary : theme.textSecondary}
+          />
+        </Animated.View>
+      </View>
 
       <TextInput
         value={value}
@@ -73,7 +89,10 @@ export function SearchInput({
 
       {value.length > 0 && (
         <Animated.View entering={ZoomIn.duration(150)} exiting={ZoomOut.duration(150)}>
-          <Pressable hitSlop={8} onPress={() => onChangeText('')}>
+          <Pressable
+            hitSlop={8}
+            onPress={() => onChangeText('')}
+            style={({ pressed }) => pressed && styles.pressed}>
             <SymbolView
               name={{ ios: 'xmark.circle.fill', android: 'cancel', web: 'cancel' }}
               size={18}
@@ -101,5 +120,20 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: FontSize.base,
     padding: 0,
+  },
+  iconWrapper: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconBadge: {
+    position: 'absolute',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+  },
+  pressed: {
+    opacity: 0.6,
   },
 });

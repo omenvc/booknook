@@ -3,13 +3,17 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Book } from '@/api/books';
 import { ThemedText } from '@/components/themed-text';
-import { Fonts, FontWeight, Spacing } from '@/constants/theme';
+import { Fonts, FontWeight, LineHeight, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type BookCardProps = {
   book: Book;
   onPress?: () => void;
 };
+
+const COVER_HEIGHT = 96;
+
+export const BOOK_CARD_HEIGHT = Spacing.three * 2 + COVER_HEIGHT;
 
 export function BookCard({ book, onPress }: BookCardProps) {
   const theme = useTheme();
@@ -62,7 +66,7 @@ const styles = StyleSheet.create({
   },
   cover: {
     width: 64,
-    height: 96,
+    height: COVER_HEIGHT,
     borderRadius: Spacing.one,
   },
   details: {
@@ -72,6 +76,7 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: Spacing.half,
+    minHeight: LineHeight.base * 2,
   },
   price: {
     marginTop: Spacing.half,

@@ -18,7 +18,7 @@ export function useBookDetails(id: string) {
 
   useEffect(() => {
     let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting loading state before an async fetch; the result is applied via .then/.catch, not synchronously
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState({ book: null, loading: true, error: null });
 
     getBookDetails(id)

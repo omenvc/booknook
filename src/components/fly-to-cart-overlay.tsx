@@ -55,11 +55,6 @@ function FlyingCover({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const progress = useSharedValue(0);
 
-  // The cart tab icon isn't mounted at all on this screen (Book Details is a stack-pushed
-  // route outside the (tabs) group, so the tab bar doesn't exist in the tree here, not just
-  // in a different navigator). Approximate where it visually sits instead: the floating web
-  // tab bar sits near the top; the native tab bar sits at the bottom. Cart is the second
-  // (rightward) of the two tabs in both.
   const target = Platform.select({
     web: { x: windowWidth * 0.65, y: 40 },
     default: { x: windowWidth * 0.75, y: windowHeight - BottomTabInset / 2 },
@@ -76,14 +71,9 @@ function FlyingCover({
         runOnJS(onComplete)();
       }
     });
-    // Only the initial mount should start the flight; progress/onComplete are stable for the
-    // lifetime of this instance (each flight gets its own component via a unique key).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Animate via transform (translate/scale), not top/left directly — reanimated's web driver
-  // reliably drives transform+opacity every frame, but layout-affecting properties like
-  // top/left were visually unreliable here (the element would go invisible mid-flight).
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: interpolate(progress.value, [0, 1], [0, deltaX]) },

@@ -1,52 +1,58 @@
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { sharedStyles } from '@/constants/shared-styles';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useCheckout } from '@/hooks/use-checkout';
 import { useTheme } from '@/hooks/use-theme';
 import { selectCartTotal, useCartStore } from '@/store/use-cart-store';
+import { useOrderHistoryStore } from '@/store/use-order-history-store';
 
 export default function CheckoutScreen() {
   const theme = useTheme();
   const items = useCartStore((state) => state.items);
   const clearCart = useCartStore((state) => state.clear);
   const total = useCartStore(selectCartTotal);
+  const addOrder = useOrderHistoryStore((state) => state.addOrder);
   const { loading, error, result, submit } = useCheckout();
 
   useEffect(() => {
     if (result) {
+      addOrder({ orderId: result.orderId, total: result.total, items, timestamp: Date.now() });
       clearCart();
     }
-  }, [result, clearCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, addOrder, clearCart]);
 
   if (result) {
     return (
       <ThemedView style={{ flex: 1 }}>
-        <SafeAreaView style={styles.centerBox} edges={['bottom', 'left', 'right']}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={styles.centerBox} edges={['top', 'bottom', 'left', 'right']}>
           <View style={[styles.successBadge, { backgroundColor: theme.secondary }]}>
             <ThemedText type="subtitle" themeColor="background">
               ✓
             </ThemedText>
           </View>
-          <ThemedText type="subtitle" style={styles.centerText}>
+          <ThemedText type="subtitle" style={sharedStyles.centerText}>
             Order Confirmed
           </ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <ThemedText themeColor="textSecondary" style={sharedStyles.centerText}>
             Order {result.orderId}
           </ThemedText>
           <ThemedText type="smallBold" themeColor="primary">
             ${result.total.toFixed(2)}
           </ThemedText>
           <Pressable
-            onPress={() => router.push('/')}
+            onPress={() => router.dismissTo('/')}
             style={({ pressed }) => [
               styles.actionButton,
               { backgroundColor: theme.secondary },
-              pressed && styles.pressed,
+              pressed && sharedStyles.pressed,
             ]}>
             <ThemedText type="smallBold" themeColor="background">
               Continue Shopping
@@ -71,7 +77,7 @@ export default function CheckoutScreen() {
     return (
       <ThemedView style={{ flex: 1 }}>
         <SafeAreaView style={styles.centerBox} edges={['bottom', 'left', 'right']}>
-          <ThemedText themeColor="textSecondary" style={styles.centerText}>
+          <ThemedText themeColor="textSecondary" style={sharedStyles.centerText}>
             Your cart is empty.
           </ThemedText>
           <Pressable
@@ -79,7 +85,7 @@ export default function CheckoutScreen() {
             style={({ pressed }) => [
               styles.actionButton,
               { backgroundColor: theme.secondary },
-              pressed && styles.pressed,
+              pressed && sharedStyles.pressed,
             ]}>
             <ThemedText type="smallBold" themeColor="background">
               Back to Cart
@@ -92,7 +98,7 @@ export default function CheckoutScreen() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+      <SafeAreaView style={sharedStyles.safeArea} edges={['bottom', 'left', 'right']}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
@@ -129,7 +135,7 @@ export default function CheckoutScreen() {
             style={({ pressed }) => [
               styles.actionButton,
               { backgroundColor: theme.secondary },
-              pressed && styles.pressed,
+              pressed && sharedStyles.pressed,
             ]}>
             <ThemedText type="smallBold" themeColor="background">
               {error ? 'Retry' : 'Place Order'}
@@ -142,18 +148,12 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
   centerBox: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
     paddingHorizontal: Spacing.four,
-  },
-  centerText: {
-    textAlign: 'center',
   },
   successBadge: {
     width: 56,
@@ -198,11 +198,9 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginTop: Spacing.four,
+    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.three,
     alignItems: 'center',
-  },
-  pressed: {
-    opacity: 0.85,
   },
 });
